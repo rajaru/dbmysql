@@ -1,0 +1,23 @@
+{
+  "name": "dbmysql",
+  "version": "1.0.0",
+  "description": "Node Mysql Wrapper",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rajaru/dbmysql.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rajaru/dbmysql/issues"
+  },
+  "homepage": "https://github.com/rajaru/dbmysql#readme",
+  "dependencies": {
+    "mysql": "^2.15.0",
+    "mysql2": "^1.5.1"
+  }
+}
