@@ -30,7 +30,7 @@ class gupgrade{
 
     processQueries(sqls, cb){
         if( sqls.length==0 ){
-            if( cb )cb.apply(this);
+            if( cb )cb(false, this.logsText()+this.errorsText());
             return;
         }
         var sql = sqls.shift();

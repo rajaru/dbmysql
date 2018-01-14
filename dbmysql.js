@@ -8,7 +8,6 @@ var mysql = require('mysql2');
 class gdb{
 
     constructor(){
-        console.log('gdb: construct...');
         this.name   = null; //data base (schema?) name
         this.schema = null;
         this.conf   = null;
