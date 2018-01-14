@@ -122,7 +122,7 @@ class gupgrade{
 
     fieldDDL(fld){
         var ddl = fld.name;
-        var type= fld.hasOwnProperty('type')?fld.type:'varchar';
+        var type= (fld.hasOwnProperty('type')?fld.type:'varchar').toLowerCase();
         var size= fld.hasOwnProperty('size')?fld.size:'255';
         if( fld.hasOwnProperty('auto') && fld.auto)
             ddl += ' '+type+' AUTO_INCREMENT PRIMARY KEY';
@@ -139,10 +139,10 @@ class gupgrade{
         
         if( fld.hasOwnProperty('primary') && fld.primary )
             ddl += ' PRIMARY KEY ';
-        if( fld.hasOwnProperty('null') && fld.null == 'NO' )
+        if( fld.hasOwnProperty('null') && fld.null.toUpperCase() == 'NO' )
             ddl += ' NOT NULL ';
-        if( fld.hasOwnProperty('default') && fld.null == 'NO' )
-            if( fld.default=='CURRENT_TIMESTAMP' )
+        if( fld.hasOwnProperty('default') && fld.null.toUpperCase() == 'NO' )
+            if( fld.default.toUpperCase()=='CURRENT_TIMESTAMP' )
                 ddl += " default "+fld.default+"";
             else
                 ddl += " default '"+fld.default+"'";
@@ -178,7 +178,7 @@ class gupgrade{
         var prev = '';
         for(var i in fields){
             const fld = fields[i];
-            var type = fld.hasOwnProperty('type')?fld.type:'varchar';
+            var type = (fld.hasOwnProperty('type')?fld.type:'varchar').toLowerCase();
             var size = fld.hasOwnProperty('size')?fld.size:'255';
             
             if( tableFields.hasOwnProperty(fld.name) ){
