@@ -141,8 +141,8 @@ class gupgrade{
             ddl += ' PRIMARY KEY ';
         if( fld.hasOwnProperty('null') && fld.null.toUpperCase() == 'NO' )
             ddl += ' NOT NULL ';
-        if( fld.hasOwnProperty('default') && fld.null.toUpperCase() == 'NO' )
-            if( fld.default.toUpperCase()=='CURRENT_TIMESTAMP' )
+        if( fld.hasOwnProperty('default') )
+            if( (''+fld.default).toUpperCase()=='CURRENT_TIMESTAMP' )
                 ddl += " default "+fld.default+"";
             else
                 ddl += " default '"+fld.default+"'";
