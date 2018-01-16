@@ -23,6 +23,10 @@ class gdb{
         return obj;
     }
 
+    debug(on){
+        debug = on;
+    }
+
     connect(conf, schema){
         this.name   = conf.database;
         this.schema = schema;
