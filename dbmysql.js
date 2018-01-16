@@ -165,7 +165,7 @@ class gdb{
         var self = this;
         return new Promise( (resolve, reject)=>{
             self.query(sql, params, (err, rows, flds)=>{
-                if( err ){this.error = err; reject(err);}
+                if( err ){self.error = err; reject(err);}
                 else resolve([rows, flds])
             })
         });
