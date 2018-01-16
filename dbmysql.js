@@ -1,6 +1,8 @@
 var mysql = require('mysql2');
 //var mysql = require('mysql');
 
+var debug = false;
+
 /*
  * conf:
  *      host, port, socketPath, user, password, database, charset
@@ -13,7 +15,6 @@ class gdb{
         this.conf   = null;
         this.pool   = null;
         this.error  = null;
-        this.debug  = false;
     }
 
     _mergeProps(obj, prop){
@@ -69,7 +70,7 @@ class gdb{
     query(sql, params, cb){
         if( !this._check() )return cb?cb(true):null;
         this.pool.query(sql, params, function(err, rows, flds){
-            if( this.debug )console.log('query:', sql, params, err, rows);
+            if( debug )console.log('query:', sql, params, err, rows);
             if(cb)cb(err, rows, flds);
         });        
     }
@@ -85,7 +86,7 @@ class gdb{
     avalue(sql, params, cb){
         if( !this._check() )return cb(true);
         this.pool.query(sql, params || [], function(err, rows, flds){
-            if( this.debug )console.log('avalue:', sql, params, err, rows);
+            if( debug )console.log('avalue:', sql, params, err, rows);
             if( rows.length>0 )return cb(err, rows[0][0], flds);
             cb('not found', null, flds);
         });
@@ -94,7 +95,7 @@ class gdb{
     row(sql, params, cb){
         if( !this._check() )return cb(true);
         this.pool.query(sql, params, function(err, rows, flds){
-            if( this.debug )console.log('row:', sql, params, err, rows);
+            if( debug )console.log('row:', sql, params, err, rows);
             if( !err && rows.length>0 )cb(err, rows[0], flds);
             if(cb)cb('not found', null, flds);
         });
@@ -103,7 +104,7 @@ class gdb{
     rows(sql, params, cb){
         if( !this._check() )return null;
         this.pool.query(sql, params, function(err, rows, flds){
-            if( this.debug )console.log('rows:', sql, params, err, rows);
+            if( debug )console.log('rows:', sql, params, err, rows);
             if(cb)cb(err, rows, flds);
         });
     }
@@ -151,7 +152,7 @@ class gdb{
     //
     end(){
         if( this.pool ){
-            if(this.debug)console.log('closing mysql connection pool.');
+            if(debug)console.log('closing mysql connection pool.');
             this.pool.end();
         }
     }
