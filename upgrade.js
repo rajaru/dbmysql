@@ -67,6 +67,11 @@ class gupgrade{
                 self.log('    matching table schema with definition');
                 self.updateTable(tname, table, rows);
             }
+            if( table.hasOwnProperty('trigger') ){
+                if( !(table.trigger instanceof Array) )table.trigger = [table.trigger];
+                for(var tr of table.trigger )self.sqls.push(tr);
+            }
+
             if(cb)cb.apply(self);
         });
     }
