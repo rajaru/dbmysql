@@ -105,7 +105,7 @@ class gdb{
         });
     }
 
-    rows(sql, params, cb){
+    arows(sql, params, cb){
         if( !this._check() )return null;
         this.pool.query(sql, params, function(err, rows, flds){
             if( debug )console.log('rows:', sql, params, err, rows);
