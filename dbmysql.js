@@ -144,7 +144,10 @@ class gdb{
         var sql = "insert into "+table+" ("+qfields.join(',')+") values  "+holders.join(',');
         if (updt){
             sql += " on duplicate key update ";
-            for(var fname of qfields )sql += fname+"=values("+fname+"),";
+            for(var fname of qfields ){
+                if( !fields[fname].primary && !fields[fname].auto )
+                    sql += fname+"=values("+fname+"),";
+            }
             sql = sql.substring(0, sql.length-1);
         }
         this.pool.query(sql, values, cb);
