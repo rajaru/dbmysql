@@ -22,10 +22,6 @@ class gdb{
         return obj;
     }
 
-    verbose(on){
-        this.verbose = on;
-    }
-
     connect(conf, schema){
         this.name   = conf.database;
         this.schema = schema;
