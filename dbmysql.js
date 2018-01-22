@@ -1,8 +1,6 @@
 var mysql = require('mysql2');
 //var mysql = require('mysql');
 
-var debug = false;
-
 /*
  * conf:
  *      host, port, socketPath, user, password, database, charset
@@ -15,6 +13,7 @@ class gdb{
         this.conf   = null;
         this.pool   = null;
         this.error  = null;
+        this.verbose= 0;
     }
 
     _mergeProps(obj, prop){
@@ -23,8 +22,8 @@ class gdb{
         return obj;
     }
 
-    debug(on){
-        debug = on;
+    verbose(on){
+        this.verbose = on;
     }
 
     connect(conf, schema){
@@ -32,6 +31,7 @@ class gdb{
         this.schema = schema;
         this._makeFieldList();
         this.conf = this._mergeProps(conf, { host: '127.0.0.1', port: 3306, user: 'root', password: '', charset: 'utf8_general_ci', supportBigNumbers: true, dateStrings: true});
+        if( this.verbose>2 )console.log('connect: ', conf.host+':'+conf.port, 'as user:'+conf.user, 'charset:', conf.charset, 'date as string: ', conf.dateStrings );
         this.pool = mysql.createPool(this.conf);
     }
 
@@ -71,10 +71,17 @@ class gdb{
         return this.pool.escapeId(val);
     }
 
+    print(ctx, sql, params, err, rows){
+        if( !this.verbose )return;
+        if( this.verbose>2 )console.log(ctx+":", sql, params, 'err:', err, rows);
+        else if( this.verbose>1 )console.log(ctx+":", sql, params, 'err:', err);
+        else if( this.verbose>0 && err )console.log(ctx+":", err);
+    }
+
     query(sql, params, cb){
         if( !this._check() )return cb?cb(true):null;
         this.pool.query(sql, params, function(err, rows, flds){
-            if( debug )console.log('query:', sql, params, err, rows);
+            this.print('query', sql, params, err, rows);
             if(cb)cb(err, rows, flds);
         });        
     }
@@ -90,7 +97,7 @@ class gdb{
     avalue(sql, params, cb){
         if( !this._check() )return cb(true);
         this.pool.query(sql, params || [], function(err, rows, flds){
-            if( debug )console.log('avalue:', sql, params, err, rows);
+            this.print('avalue', sql, params, err, rows);
             if( rows.length>0 )return cb(err, rows[0][0], flds);
             cb('not found', null, flds);
         });
@@ -99,7 +106,7 @@ class gdb{
     row(sql, params, cb){
         if( !this._check() )return cb(true);
         this.pool.query(sql, params, function(err, rows, flds){
-            if( debug )console.log('row:', sql, params, err, rows);
+            this.print('row', sql, params, err, rows);
             if( !err && rows.length>0 )cb(err, rows[0], flds);
             if(cb)cb('not found', null, flds);
         });
@@ -108,7 +115,7 @@ class gdb{
     arows(sql, params, cb){
         if( !this._check() )return null;
         this.pool.query(sql, params, function(err, rows, flds){
-            if( debug )console.log('rows:', sql, params, err, rows);
+            this.print('arows', sql, params, err, rows);
             if(cb)cb(err, rows, flds);
         });
     }
@@ -159,7 +166,7 @@ class gdb{
     //
     end(){
         if( this.pool ){
-            if(debug)console.log('closing mysql connection pool.');
+            if(this.verbose)console.log('closing mysql connection pool.');
             this.pool.end();
         }
     }
