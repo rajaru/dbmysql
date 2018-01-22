@@ -76,8 +76,9 @@ class gdb{
 
     query(sql, params, cb){
         if( !this._check() )return cb?cb(true):null;
+        var self = this;
         this.pool.query(sql, params, function(err, rows, flds){
-            this.print('query', sql, params, err, rows);
+            self.print('query', sql, params, err, rows);
             if(cb)cb(err, rows, flds);
         });        
     }
@@ -91,27 +92,21 @@ class gdb{
 
     // get a single row, single col value as return value
     avalue(sql, params, cb){
-        if( !this._check() )return cb(true);
-        this.pool.query(sql, params || [], function(err, rows, flds){
-            this.print('avalue', sql, params, err, rows);
+        this.query(sql, params || [], function(err, rows, flds){
             if( rows.length>0 )return cb(err, rows[0][0], flds);
             cb('not found', null, flds);
         });
     }
 
     row(sql, params, cb){
-        if( !this._check() )return cb(true);
-        this.pool.query(sql, params, function(err, rows, flds){
-            this.print('row', sql, params, err, rows);
+        this.query(sql, params, function(err, rows, flds){
             if( !err && rows.length>0 )cb(err, rows[0], flds);
             if(cb)cb('not found', null, flds);
         });
     }
 
     arows(sql, params, cb){
-        if( !this._check() )return null;
-        this.pool.query(sql, params, function(err, rows, flds){
-            this.print('arows', sql, params, err, rows);
+        this.query(sql, params, function(err, rows, flds){
             if(cb)cb(err, rows, flds);
         });
     }
