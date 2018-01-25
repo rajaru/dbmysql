@@ -98,7 +98,7 @@ class gdb{
         });
     }
 
-    row(sql, params, cb){
+    arow(sql, params, cb){
         this.query(sql, params, function(err, rows, flds){
             if( !err && rows.length>0 )cb(err, rows[0], flds);
             if(cb)cb('not found', null, flds);
@@ -208,6 +208,31 @@ class gdb{
         try{
             const [rows, flds] = await this._exec(sql, params);
             return rows;
+        }catch(e){
+            this.error = e.message;
+            return null;
+        }
+    }
+    
+    async row(sql, params){
+        try{
+            const [rows, flds] = await this._exec(sql, params);
+            return ( rows.length>0 ) ? rows[0] : [];
+        }catch(e){
+            this.error = e.message;
+            return null;
+        }
+    }
+
+    async map(sql, params, key){
+        try{
+            const [rows, flds] = await this._exec(sql, params);
+            var obj = {};
+            key = key || flds[0].name;
+            for(var row of rows ){
+                obj[ row[key] ] = row;
+            }
+            return obj;
         }catch(e){
             this.error = e.message;
             return null;
