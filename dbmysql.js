@@ -69,7 +69,7 @@ class gdb{
 
     print(ctx, sql, params, err, rows){
         if( !this.verbose )return;
-        if( this.verbose>2 )console.log(ctx+":", sql, params, 'err:', err, rows);
+        if( this.verbose>2 || err )console.log(ctx+":", sql, params, 'err:', err, rows);
         else if( this.verbose>1 )console.log(ctx+":", sql, params, 'err:', err);
         else if( this.verbose>0 && err )console.log(ctx+":", err);
     }
@@ -122,33 +122,62 @@ class gdb{
         
         if( !(data instanceof Array) )data = [data];
         var fields = this.schema[table].fldlist;
+        var primary = null;
+        var primaryFunc = '';
+        var prefix = "";
+        for(var fld in fields ){
+            if( fields[fld].primary && fields[fld].func ){
+                primary = fld;
+                primaryFunc = fields[fld].func;
+                if( fields[fld].func_param )
+                    prefix = fields[fld].func_param;
+                else
+                    prefix = primary[0].toUpperCase();
+                break;
+            }
+        }
 
         var qfields = [];
         for(var fld in data[0]){
+            if( !fields.hasOwnProperty(fld) || (fields[fld].auto && !data[0][fld])  || fld == primary )continue;
             if( fields.hasOwnProperty(fld) )qfields.push(fld);
         }
-
+        //console.log('fields:', fields);
         var values = [];
         var holders = [];
         for(var d of data){
             var row = [];
-            for(var fname of qfields )
+            if( primary ){
+                //console.log('primary:', primary, d[primary]);
+                if(d.hasOwnProperty(primary) && d[primary] ) // if key field already present and valid, do not use the func to generate one
+                    row.push(d[primary]);
+                else
+                    row.push( {toSqlString: function(){return primaryFunc+"('"+table+"', '"+prefix+"')"} } );
+            }
+            for(var fname of qfields ){
                 row.push( d.hasOwnProperty(fname) ? d[fname]:'' );
-
+            }
             values.push(row);
             holders.push('(?)');
         }
 
-        var sql = "insert into "+table+" ("+qfields.join(',')+") values  "+holders.join(',');
+        if( primary )
+            var sql = "insert into "+table+" ("+primary+","+qfields.join(',')+") values  "+holders.join(',');
+        else
+            var sql = "insert into "+table+" ("+qfields.join(',')+") values  "+holders.join(',');
         if (updt){
             sql += " on duplicate key update ";
             for(var fname of qfields ){
-                if( !fields[fname].primary && !fields[fname].auto )
+                if( !fields[fname].primary && !fields[fname].auto && fname!='uuid')
                     sql += fname+"=values("+fname+"),";
             }
             sql = sql.substring(0, sql.length-1);
         }
-        this.pool.query(sql, values, cb);
+        //console.log(sql, values[0].length);
+        this.pool.query(sql, values, function(err, rows, flds){
+            //console.log(this.sql);
+            cb(err, rows, flds)
+        });
     }
 
 
@@ -224,11 +253,17 @@ class gdb{
         }
     }
 
-    async map(sql, params, key){
+    async map(sql, params, key, vcol){
         try{
             const [rows, flds] = await this._exec(sql, params);
             var obj = {};
             key = key || flds[0].name;
+            if( vcol ){
+                
+                for(var row of rows )
+                    obj[ row[key] ] = row[vcol];
+                return obj;                    
+            }
             for(var row of rows ){
                 obj[ row[key] ] = row;
             }
@@ -238,6 +273,21 @@ class gdb{
             return null;
         }
     }
+
+    async array(sql, params, key){
+        try{
+            const [rows, flds] = await this._exec(sql, params);
+            key = key || flds[0].name;
+            return Array.from(rows, x => x[key]);
+            //for(var row of rows )arr.push( row[key] );
+            //return arr;
+        }catch(e){
+            this.error = e.message;
+            console.log(e.message);
+            return null;
+        }
+    }
+
 
     async insertOrUpdate(table, data){
         try{

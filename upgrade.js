@@ -21,11 +21,23 @@ class gupgrade{
     processTableList(tables, cb){
         if( tables.length==0 )return cb.apply(this);
         var tname = tables.shift();
-        this.checkTable( tname, this.db.schema[tname], function(){
-            this.updateIndices(tname, this.db.schema[tname], function(){
-                this.processTableList(tables, cb);
-            });
-        });
+        if( this.db.schema[tname].is_view ){
+            var table = this.db.schema[tname];
+            if( table.hasOwnProperty('view') ){
+                if( !(table.view instanceof Array) )table.view = [table.view];
+                for(var tr of table.view ){
+                    this.sqls.push(tr);
+                }
+            }
+            if(cb)cb.apply(this);
+        }
+        else{
+            this.checkTable( tname, this.db.schema[tname], function(){
+                this.updateIndices(tname, this.db.schema[tname], function(){
+                    this.processTableList(tables, cb);
+                });
+            });    
+        }
     }
 
     processQueries(sqls, cb){
@@ -38,7 +50,7 @@ class gupgrade{
         this.db.query(sql, [], function(err, rows, flds){
             if( err ){
                 console.log('failed to execute query ', sql);
-                console.log(err);
+                self.error(err);
             }
             self.processQueries(sqls, cb);
         })
@@ -93,8 +105,8 @@ class gupgrade{
 
         this.processIndexList(tname, indices, false, function(){
             indices = [];
-            if( table.hasOwnProperty('unique') )
-                if( table.unique.length>0 && table.unique[0] instanceof Array )
+            if( table.hasOwnProperty('unique') && table.unique.length>0)
+                if( table.unique[0] instanceof Array )
                     indices.push.apply(indices, table.unique);
                 else
                     indices.push(table.unique);
@@ -138,7 +150,7 @@ class gupgrade{
         else if( type == 'jsonb' )
             ddl += ' varchar('+size+')';
         else if( type == 'blob' )
-            ddl += ' mediumblob ';
+            ddl += ' longblob ';
         else
             ddl += ' '+type+' ';
         
@@ -204,6 +216,14 @@ class gupgrade{
                 else if( type != 'timestamp' && (fld.hasOwnProperty('null')?fld.null:"YES") != tfld.IS_NULLABLE ){
                     console.log('    '+fld.name+':nullable mismatch '+tfld.IS_NULLABLE+' : '+fld.hasOwnProperty('null'));
                     needUpdate = true;
+                }
+
+                if( fld.hasOwnProperty('default') && (fld.default===0 || fld.default) ){
+                    var deflt = (''+fld.default).toLowerCase().trim();
+                    if( deflt != tfld.COLUMN_DEFAULT.toLowerCase().trim() ){
+                        console.log('    '+fld.name+':default mismatch ['+tfld.COLUMN_DEFAULT+'] : ['+deflt+']');
+                        needUpdate = true;
+                    }
                 }
                 
                 if( needUpdate ){
