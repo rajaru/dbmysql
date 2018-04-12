@@ -246,7 +246,7 @@ class gdb{
     async row(sql, params){
         try{
             const [rows, flds] = await this._exec(sql, params);
-            return ( rows.length>0 ) ? rows[0] : [];
+            return ( rows.length>0 ) ? rows[0] : null;
         }catch(e){
             this.error = e.message;
             return null;
