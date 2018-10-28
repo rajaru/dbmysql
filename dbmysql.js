@@ -193,12 +193,20 @@ class gdb{
 
     _exec(sql, params){
         var self = this;
-        return new Promise( (resolve, reject)=>{
-            self.query(sql, params, (err, rows, flds)=>{
-                if( err ){self.error = err; reject(err);}
-                else resolve([rows, flds])
-            })
-        });
+        try{
+            return new Promise( (resolve, reject)=>{
+                try{
+                    self.query(sql, params, (err, rows, flds)=>{
+                        if( err ){self.error = err; reject(err);}
+                        else resolve([rows, flds])
+                    });    
+                }catch(e){
+                    console.log('exc1: ', e);
+                }
+            });    
+        }catch(e){
+            console.log('exc: ', e);
+        }
     }
 
     _insertOrUpdate(table, data){
