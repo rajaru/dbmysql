@@ -1,4 +1,5 @@
 var mysql = require('mysql2');
+const {performance}        = require('perf_hooks');
 //var mysql = require('mysql');
 
 /*
@@ -77,10 +78,12 @@ class gdb{
     query(sql, params, cb){
         if( !this._check() )return cb?cb(true):null;
         var self = this;
+        var start = performance.now();
         this.pool.query(sql, params, function(err, rows, flds){
+            //console.log((performance.now()-start), sql);
             self.print('query', sql, params, err, rows);
             if(cb)cb(err, rows, flds);
-        });        
+        }); 
     }
     
     insert(sql, data, cb){
@@ -173,7 +176,7 @@ class gdb{
             }
             sql = sql.substring(0, sql.length-1);
         }
-        //console.log(sql, values[0].length);
+        //console.log(sql, values);
         this.pool.query(sql, values, function(err, rows, flds){
             //console.log(this.sql);
             cb(err, rows, flds)
@@ -196,15 +199,18 @@ class gdb{
         try{
             return new Promise( (resolve, reject)=>{
                 try{
-                    self.query(sql, params, (err, rows, flds)=>{
-                        if( err ){self.error = err; reject(err);}
-                        else resolve([rows, flds])
-                    });    
-                }catch(e){
+                self.query(sql, params, (err, rows, flds)=>{
+                    if( err ){self.error = err; reject(err);}
+                    else resolve([rows, flds])
+                });
+                }
+                catch(e){
                     console.log('exc1: ', e);
                 }
+                        
             });    
-        }catch(e){
+        }
+        catch(e){
             console.log('exc: ', e);
         }
     }
