@@ -315,6 +315,7 @@ class gdb{
 
 }
 
+//singleton
 var _db = new gdb();
 module.exports = _db;
 
@@ -323,4 +324,12 @@ _db.upgrade = function( cb ){
     var upgrade = require('./upgrade');
     var upg = new upgrade(_db);
     upg.check( cb );
+}
+
+// should you require another connection (perhaps to another db), use this _new function
+// and call connect afterwards. The full responsibility of the returned db is with you, no
+// other reference is stored here
+//
+_db._new = function(){
+    return new gdb();
 }
