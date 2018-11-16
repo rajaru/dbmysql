@@ -121,9 +121,9 @@ class gupgrade{
         var idxName = tname;
         for(var i in index )idxName += '_'+index[i];
 
-        var sql = "select index_name from information_schema.statistics WHERE table_name='"+tname+"' and index_name='"+idxName+"'";
+        var sql = "select index_name from information_schema.statistics WHERE TABLE_SCHEMA=? and table_name=? and index_name=?";
         var self = this;
-        db.query(sql, [], function(err, rows, flds){
+        db.query(sql, [this.db.name, tname, idxName], function(err, rows, flds){
             if( err || rows.length==0 ){
                 self.log('    index '+idxName+' does not exists, creating it.');
                 var sql = "create "+(unique?"UNIQUE":"")+" index "+idxName+" on "+tname+" ("+index.join(',')+")";
