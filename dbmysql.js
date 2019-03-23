@@ -177,7 +177,9 @@ class gdb{
             sql = sql.substring(0, sql.length-1);
         }
         //console.log(sql, values);
+        var self = this;
         this.pool.query(sql, values, function(err, rows, flds){
+            self.print('query', sql, values, err, rows);
             //console.log(this.sql);
             cb(err, rows, flds)
         });
@@ -191,6 +193,7 @@ class gdb{
         if( this.pool ){
             if(this.verbose)console.log('closing mysql connection pool.');
             this.pool.end();
+            this.pool = null;
         }
     }
 
@@ -311,6 +314,18 @@ class gdb{
             this.error = e.message;
             return null;
         }
+    }
+
+    keepAlive(toMs){
+        setTimeout( ()=>{
+            if( !this.pool )return;
+
+            var fcount = this.pool._freeConnections.size();
+            console.log( 'free connections:', this.pool._freeConnections.size(), 'connections. all:' , this.pool._allConnections.length, ' max: ', this.pool.config.connectionLimit );
+            for(var i=0; i<fcount; i++)this.exec('select 1', []);
+            
+            this.keepAlive(toMs);   // reschedule the keep alive
+        }, toMs);
     }
 
 }
