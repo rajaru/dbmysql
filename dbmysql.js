@@ -76,14 +76,38 @@ class gdb{
     }
 
     query(sql, params, cb){
+        if( !params )params = [];
+        if( !(params instanceof Array) ){
+            console.log('dbmysql.query: invalid params, expected array ', params);
+            console.log( new Error().stack );
+        }
+
         if( !this._check() )return cb?cb(true):null;
         var self = this;
         var start = performance.now();
-        this.pool.query(sql, params, function(err, rows, flds){
-            //console.log((performance.now()-start), sql);
-            self.print('query', sql, params, err, rows);
-            if(cb)cb(err, rows, flds);
-        }); 
+
+        var hasArray = params.find((x)=>x instanceof Array );
+        if( hasArray ){
+            this.pool.query(sql, params, function(err, rows, flds){
+                //console.log((performance.now()-start), sql);
+                self.print('query', sql, params, err, rows);
+                if(cb)cb(err, rows, flds);
+            });
+        }
+        else{
+            this.pool.execute(sql, params, function(err, rows, flds){
+                //console.log((performance.now()-start), sql);
+                self.print('query', sql, params, err, rows);
+                if(cb)cb(err, rows, flds);
+            });     
+        }
+
+
+        // this.pool.query(sql, params, function(err, rows, flds){
+        //     //console.log((performance.now()-start), sql);
+        //     self.print('query', sql, params, err, rows);
+        //     if(cb)cb(err, rows, flds);
+        // }); 
     }
     
     insert(sql, data, cb){
